@@ -1,108 +1,68 @@
-import React, { useState, useEffect } from "react";
+// src/pages/Notes.js
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { FaTrash, FaStar, FaEdit, FaSave } from "react-icons/fa";
+import NoteForm from "../components/NoteForm";
+import NoteItem from "../components/NoteItem";
+import "./Notes.css"; // Or your custom CSS
 
 const Notes = () => {
   const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState("");
-  const [editIndex, setEditIndex] = useState(null);
-  const [editContent, setEditContent] = useState("");
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("learnify_notes"));
-    if (stored) setNotes(stored);
-  }, []);
+  // Fetch all notes from the backend
+  const fetchNotes = async () => {
+    try {
+      const res = await axios.get("/api/notes");
+      setNotes(res.data);
+    } catch (error) {
+      console.error("Error fetching notes:", error.message);
+    }
+  };
 
-  // Save to localStorage on change
-  useEffect(() => {
-    localStorage.setItem("learnify_notes", JSON.stringify(notes));
-  }, [notes]);
-
-  const addNote = () => {
+  // Add new note
+  const addNote = async () => {
     if (newNote.trim() === "") return;
-    setNotes([...notes, { text: newNote, favorite: false }]);
+    await axios.post("/api/notes", { title: newNote, content: "" });
     setNewNote("");
+    fetchNotes();
   };
 
-  const deleteNote = (index) => {
-    const updated = notes.filter((_, i) => i !== index);
-    setNotes(updated);
+  // Delete note by ID
+  const deleteNote = async (id) => {
+    await axios.delete(`/api/notes/${id}`);
+    fetchNotes();
   };
 
-  const toggleFavorite = (index) => {
-    const updated = [...notes];
-    updated[index].favorite = !updated[index].favorite;
-    setNotes(updated);
+  // Update a note
+  const updateNote = async (id, updatedTitle) => {
+    await axios.put(`/api/notes/${id}`, { title: updatedTitle, content: "" });
+    fetchNotes();
   };
 
-  const startEdit = (index) => {
-    setEditIndex(index);
-    setEditContent(notes[index].text);
-  };
-
-  const saveEdit = () => {
-    const updated = [...notes];
-    updated[editIndex].text = editContent;
-    setNotes(updated);
-    setEditIndex(null);
-    setEditContent("");
-  };
+  useEffect(() => {
+    fetchNotes();
+  }, []);
 
   return (
     <div className="dashboard-page dark-theme">
       <Header />
-      <div className="notes-container">
-        <h2 className="section-heading text-glow">📝 Notes</h2>
+      <h2 className="section-heading text-glow">Notes</h2>
 
-        <div className="note-input-area">
-          <input
-            className="note-input"
-            type="text"
-            placeholder="Write your note..."
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
+      <NoteForm newNote={newNote} setNewNote={setNewNote} addNote={addNote} />
+
+      <div className="notes-list">
+        {notes.map((note) => (
+          <NoteItem
+            key={note._id}
+            note={note}
+            deleteNote={deleteNote}
+            updateNote={updateNote}
           />
-          <button className="add-btn glass-button" onClick={addNote}>
-            Add Note
-          </button>
-        </div>
-
-        <div className="note-list">
-          {notes.map((note, index) => (
-            <div key={index} className={`note-card ${note.favorite ? "fav" : ""}`}>
-              {editIndex === index ? (
-                <>
-                  <textarea
-                    className="edit-input"
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                  />
-                  <button className="save-btn" onClick={saveEdit}>
-                    <FaSave />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p>{note.text}</p>
-                  <div className="note-actions">
-                    <button onClick={() => toggleFavorite(index)} title="Favorite">
-                      <FaStar color={note.favorite ? "gold" : "gray"} />
-                    </button>
-                    <button onClick={() => startEdit(index)} title="Edit">
-                      <FaEdit />
-                    </button>
-                    <button onClick={() => deleteNote(index)} title="Delete">
-                      <FaTrash color="red" />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
+
       <Footer />
     </div>
   );
