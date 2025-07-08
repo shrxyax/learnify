@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-// import axios from "axios";
-// import { toast } from "react-toastify";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./AuthPage.css";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -17,38 +15,12 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
 
-    // 🔴 Backend code is commented out for UI-only preview
-    // try {
-    //   const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
-    //   const payload = isLogin
-    //     ? { email: form.email, password: form.password }
-    //     : form;
-
-    //   console.log("Sending to:", endpoint);
-    //   console.log("Payload:", payload);
-
-    //   const res = await axios.post(endpoint, payload);
-
-    //   if (isLogin) {
-    //     localStorage.setItem("token", res.data.token);
-    //     toast.success("Login successful!");
-    //     navigate("/dashboard");
-    //   } else {
-    //     toast.success("Registration successful! Please log in.");
-    //     setIsLogin(true);
-    //   }
-    // } catch (err) {
-    //   toast.error(err.response?.data?.message || "Something went wrong");
-    // } finally {
-    //   setLoading(false);
-    // }
-
-    // Temporarily simulate form success
+    // Mock login/register logic
     setTimeout(() => {
-      alert(isLogin ? "Login (mocked)" : "Register (mocked)");
       setLoading(false);
-      if (!isLogin) setIsLogin(true); // Redirect to login after register
-    }, 1000);
+      alert(isLogin ? "Logged in successfully!" : "Registered successfully!");
+      navigate("/dashboard");
+    }, 1000); // simulate network delay
   };
 
   return (
@@ -99,6 +71,10 @@ export default function AuthPage() {
             <span onClick={() => setIsLogin(!isLogin)}>
               {isLogin ? " Register" : " Login"}
             </span>
+          </p>
+
+          <p className="mock-msg">
+            🔒 This is a mock login. Backend will be added soon.
           </p>
         </div>
       </div>
