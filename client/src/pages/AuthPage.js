@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "./AuthPage.css";
 
@@ -12,16 +14,35 @@ export default function AuthPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    // Mock login/register logic
-    setTimeout(() => {
-      setLoading(false);
-      alert(isLogin ? "Logged in successfully!" : "Registered successfully!");
+  try {
+    const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
+    const payload = isLogin
+      ? { email: form.email, password: form.password }
+      : form;
+
+    console.log("Sending to:", endpoint);
+    console.log("Payload:", payload);
+
+    const res = await axios.post(endpoint, payload);
+
+    if (isLogin) {
+      localStorage.setItem("token", res.data.token);
+      toast.success("Login successful!");
       navigate("/dashboard");
-    }, 1000); // simulate network delay
-  };
+    } else {
+      toast.success("Registration successful! Please log in.");
+      setIsLogin(true);
+    }
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="auth-container">
@@ -72,13 +93,10 @@ export default function AuthPage() {
               {isLogin ? " Register" : " Login"}
             </span>
           </p>
-
-          <p className="mock-msg">
-            🔒 This is a mock login. Backend will be added soon.
-          </p>
         </div>
       </div>
     </div>
   );
 }
+
 
